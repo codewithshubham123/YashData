@@ -1,0 +1,87 @@
+package com.app.controller;
+
+
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.app.pojos.ContactUs;
+import com.app.pojos.User;
+import com.app.service.IUserService;
+
+import dto.AuthenticateUser;
+import lombok.extern.slf4j.Slf4j;
+
+@CrossOrigin(origins="http://localhost:3000")
+@RestController
+@RequestMapping("/api/psd/user")
+@Slf4j
+public class UserController {
+
+	Logger log = LoggerFactory.getLogger(UserController.class);
+
+	
+	@Autowired
+	IUserService cust_service;
+	
+	@PostMapping("/login")
+	public ResponseEntity<?> authenticateCustomer(@RequestBody @Valid AuthenticateUser customer)
+	{
+		log.info(customer.getUserEmail()+"::"+customer.getPassword());
+		User cust=cust_service.authenticateCustomerAdmin(customer.getUserEmail(),customer.getPassword());
+			return ResponseEntity.status(HttpStatus.OK).body(cust);
+	}
+	
+	@GetMapping("/logout")
+	public ResponseEntity<?> logout(HttpSession session)
+	{
+		session.invalidate();
+		log.info("Customer Logout");
+		return ResponseEntity.status(HttpStatus.OK).body("Customer successfully logout");
+	}
+	
+	@PostMapping("/updateaccount")
+	public ResponseEntity<?> updateUser(@RequestBody @Valid User cust)
+	{
+		User customer=cust_service.updateCustomer(cust);
+		log.info("user updated details :: "+customer);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(customer);
+	}
+	
+	@PostMapping("/contactus")
+	public ResponseEntity<?> ContactUsDetails(@RequestBody @Valid ContactUs contactus)
+	{
+		
+		String contact=cust_service.contactUsDetailsSave(contactus);
+		log.info("user updated details :: "+contactus.getEmail());
+		return ResponseEntity.status(HttpStatus.OK).body(contact);
+	}
+	
+	@GetMapping("/getallprofessions")
+	public ResponseEntity<?> getAllProfessions()
+	{
+		return ResponseEntity.status(HttpStatus.OK).body(cust_service.getProfessions());
+	}
+	
+	@GetMapping("/getbasiccharge/{professionName}")
+	public ResponseEntity<?> getBasicCharge(@PathVariable String professionName)
+	{
+		return ResponseEntity.status(HttpStatus.OK).body(cust_service.getBasics(professionName));
+	}
+	
+	
+	
+}
